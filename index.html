@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Comfort Shop - Final Cyberpunk Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           字体引入
+        ========================================= */
+        @font-face {
+            font-family: 'PixelFont';
+            src: url('assets/ZLabsBitmap.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'fusionpixel12px';
+            src: url('assets/fusionpixel12px.ttf') format('truetype');
+        }
+    
+        /* =========================================
+           PART 1: 核心变量
+        ========================================= */
+        :root {
+            --bg-color: #050505;
+            --machine-bg: #222;
+            --panel-bg: #333438;
+            /* 霓虹色定义 */
+            --neon-pink: #ff00ff;
+            --neon-purple: #bc13fe;
+            --neon-cyan: #00ffff;
+            --neon-green: #0aff00;
+            --neon-yellow: #f8e71c;
+            --neon-red: #ff3333;
+            --neon-orange: #ff8800;
+            --dialogue-bg: rgba(0, 0, 0, 0.9);
+            /* 弹窗通用变量 */
+            --modal-overlay-bg: rgba(0, 0, 0, 0.30);
+            --modal-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'VT323', monospace;
+            margin: 0; display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden; user-select: none;
+        }
+
+        /* --- 开场屏幕 --- */
+        #intro-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #080008;
+            z-index: 999;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: transform 0.6s cubic-bezier(0.7, 0, 0.84, 0); 
+            background-image: 
+                linear-gradient(rgba(188, 19, 254, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px; 
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+        #intro-screen.closed { transform: translateY(-100%);
+            pointer-events: none; }
+
+        .intro-title {
+            font-size: 7em;
+            position: relative; margin-bottom: 40px;
+            letter-spacing: 8px;
+            color: #fff; text-transform: uppercase;
+            text-shadow: 0 0 5px #fff, 0 0 15px var(--neon-purple), 0 0 30px var(--neon-pink);
+            animation: title-flicker 4s infinite;
+        }
+        .intro-title::before, .intro-title::after {
+            content: "AI Comfort Shop";
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; opacity: 0.8;
+        }
+        .intro-title::before {
+            color: var(--neon-cyan);
+            z-index: -1; text-shadow: -3px 0 var(--neon-cyan); 
+            animation: glitch-anim-cyan 3s infinite linear alternate-reverse;
+            clip-path: inset(0 0 60% 0);
+        }
+        .intro-title::after {
+            color: var(--neon-pink);
+            z-index: -2; text-shadow: 3px 0 var(--neon-pink); 
+            animation: glitch-anim-pink 2.5s infinite linear alternate-reverse;
+            clip-path: inset(40% 0 0 0);
+        }
+
+        @keyframes title-flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1;
+            filter: brightness(1); }
+            20%, 24%, 55% { opacity: 0.8;
+            filter: brightness(1.5); text-shadow: 0 0 30px var(--neon-pink); } 
+        }
+        @keyframes glitch-anim-cyan {
+            0% { transform: translate(-4px, 1px);
+            }
+            60% { transform: translate(-2px, -1px);
+            clip-path: inset(10% 0 70% 0); }
+            100% { transform: translate(-5px, 2px);
+            clip-path: inset(0 0 60% 0); } 
+        }
+        @keyframes glitch-anim-pink {
+            0% { transform: translate(4px, -1px);
+            }
+            40% { transform: translate(2px, 2px);
+            clip-path: inset(50% 0 20% 0); }
+            100% { transform: translate(5px, -2px);
+            clip-path: inset(40% 0 0 0); } 
+        }
+
+        .intro-hint {
+            font-size: 1.6em;
+            color: var(--neon-green); margin-bottom: 50px; letter-spacing: 3px; 
+            text-shadow: 0 0 8px var(--neon-green), 0 0 20px var(--neon-green);
+            animation: breathe 2.5s infinite ease-in-out;
+        }
+        @keyframes breathe {
+            0%, 100% { opacity: 0.6;
+            transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1);
+            } 
+        }
+
+        .neon-border-btn {
+            position: relative;
+            background: transparent; color: var(--neon-cyan);
+            font-family: 'VT323', monospace; font-size: 3.5em; padding: 15px 80px;
+            border: 4px solid var(--neon-cyan);
+            cursor: pointer; letter-spacing: 5px;
+            overflow: hidden; transition: all 0.2s; text-transform: uppercase;
+            box-shadow: 0 0 10px var(--neon-cyan), 0 0 30px var(--neon-cyan), inset 0 0 15px var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); 
+        }
+        .neon-border-btn:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 20px var(--neon-cyan), 0 0 50px var(--neon-cyan), inset 0 0 25px var(--neon-cyan);
+            text-shadow: 0 0 15px #fff, 0 0 30px var(--neon-cyan); 
+        }
+        .neon-border-btn:active { transform: scale(0.97);
+            background: rgba(0, 255, 255, 0.2); } 
+
+
+        /* =========================================
+           PART 2: 游戏主体与界面
+        ========================================= */
+        .game-container {
+            position: relative;
+            width: 1215px; height: 680px;
+            background-color: #000;
+            background-image: url('assets/bg_main.png');
+            background-size: cover; 
+            background-position: center;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; overflow: hidden; color: #fff;
+        }
+
+        /* --- 顶部状态栏 --- */
+	    .top-bar { 
+            position: absolute;
+            top: 15px; 
+            left: -4px;
+            width: 175px;
+            height: 70px;  
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;           
+            background-color: #222; 
+            border-radius: 4px;
+	        background-image: url('assets/shop_sign.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-color: transparent;
+            border: none;
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding-left: 40px;
+            padding-right: 15px; 
+            padding-bottom: 4px; 
+            gap: 8px; /* 文字和钱数之间的间距 */
+            z-index: 100;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.8));
+        }
+
+        .money-box { 
+            background: transparent;
+            border: none; padding: 0; 
+            color: var(--neon-yellow); font-size: 15px;
+	        font-weight: bold;
+            position: relative; min-width: 40px; text-align: right;
+            display: flex; align-items: center;
+        }
+        
+    	.level-info {
+            font-size: 15px;
+            color: #888; display: flex; align-items: center;
+        }
+        .stat-divider { width: 1px; height: 15px;
+            background-color: #444; }
+        .money-pop {
+            position: absolute;
+            left: 100%; top: -5px; margin-left: 5px;
+            font-size: 14px; font-weight: bold;
+            animation: moneyFloatUp 1.5s forwards;
+            text-shadow: 1px 1px 0 #000;
+            white-space: nowrap;
+        }
+        @keyframes moneyFloatUp {
+            0% { opacity: 0;
+            transform: translateY(10px); }
+            15% { opacity: 1; transform: translateY(0);
+            }
+            100% { opacity: 0; transform: translateY(-30px);
+            }
+        }
+
+        .shop-area {
+            flex: 1;
+            position: relative; 
+            background: transparent;
+            display: flex;
+            flex-direction: column; padding-bottom: 220px; justify-content: flex-end;
+        }
+        
+        .button-panel { 
+            display: flex;
+            width: 100%; height: 100%; 
+            justify-content: center; 
+            align-items: flex-start; 
+            padding-top: 188px;
+            gap: 100px; 
+            transform: none;
+        }
+        
+        /* --- 按钮基础样式 --- */
+        .machine-btn {
+            width: 130px;
+            height: 42px;  
+            background: rgba(0, 0, 0, 0.6); 
+            border: 2px solid #fff; 
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.1em;
+            font-family: 'VT323', monospace;
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            cursor: pointer; transition: all 0.3s ease;
+            position: relative;
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        .machine-btn:active { transform: scale(0.95);
+        }
+
+    	.machine-btn.lang-en {
+            font-size: 1.0em !important;
+            letter-spacing: 0.9px !important;
+        }
+
+        .machine-btn.lang-cn {
+            font-size: 1.1em !important;
+            letter-spacing: 1.5px !important;
+        }
+
+        /* 蓝色按钮: 左移 */
+        .btn-logic {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 15px var(--neon-cyan), inset 0 0 10px var(--neon-cyan);
+            left: -155px;
+        }
+        .btn-logic:hover {
+            background: rgba(0, 255, 255, 0.15);
+            box-shadow: 0 0 30px var(--neon-cyan), inset 0 0 20px var(--neon-cyan);
+            text-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        /* 紫色按钮: 左移 */
+        .btn-ml {
+            border-color: var(--neon-purple);
+            color: var(--neon-purple);
+            box-shadow: 0 0 15px var(--neon-purple), inset 0 0 10px var(--neon-purple);
+            left: 5px;
+        }
+        .btn-ml:hover {
+            background: rgba(188, 19, 254, 0.15);
+            box-shadow: 0 0 30px var(--neon-purple), inset 0 0 20px var(--neon-purple);
+            text-shadow: 0 0 20px var(--neon-purple);
+        }
+
+        /* 橙色按钮: 右移 */
+        .btn-hardware {
+            border-color: var(--neon-orange);
+            color: var(--neon-orange);
+            box-shadow: 0 0 15px var(--neon-orange), inset 0 0 10px var(--neon-orange);
+            left: 153px;
+        }
+        .btn-hardware:hover {
+            background: rgba(255, 136, 0, 0.15);
+            box-shadow: 0 0 30px var(--neon-orange), inset 0 0 20px var(--neon-orange);
+            text-shadow: 0 0 20px var(--neon-orange);
+        }
+
+
+        /* =========================================
+           PART 3: 模态弹窗系统
+        ========================================= */
+
+        #shop-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: var(--modal-overlay-bg);
+            backdrop-filter: blur(8px);
+            z-index: 200; display: none; opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        #shop-overlay.active { display: block; opacity: 1;
+        }
+
+        /* Workspace Modal */
+        .workspace-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            width: 800px; 
+            height: auto; 
+            min-height: 450px; 
+            padding-bottom: 30px; 
+            transform: translate(-50%, -50%) scale(0.9);
+            z-index: 300;
+            background-color: #000;
+            border: 4px solid var(--modal-border-color, #fff);
+            box-shadow: 0 0 0 1000px rgba(0,0,0,0.5);
+            flex-direction: column;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .workspace-modal.active { display: flex;
+            opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        .modal-header {
+            background: var(--modal-border-color, #555);
+            color: #000;
+            padding: 10px 15px; font-size: 1.5em; text-transform: uppercase; letter-spacing: 2px;
+            display: flex; justify-content: space-between; align-items: center; font-weight: bold;
+        }
+        .modal-close-btn {
+            background: #000;
+            border: none; color: var(--modal-border-color);
+            font-family: inherit; font-size: 0.7em; cursor: pointer; padding: 5px 15px; font-weight: bold; text-transform: uppercase;
+        }
+        .modal-close-btn:hover { background: #fff; color: #000;
+        }
+
+        .modal-body { 
+            flex: 1;
+            padding: 40px; 
+            overflow-y: auto;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            gap: 50px;
+        }
+        
+        .items-grid { width: 90%;
+            margin: 0; }
+
+        .items-grid.mode-list {
+            display: flex;
+            flex-direction: column; gap: 20px; align-items: center; width: 85%; 
+        }
+
+        .items-grid.mode-grid {
+            display: flex;
+            flex-wrap: wrap; justify-content: center; gap: 30px; max-width: 550px; 
+        }
+        
+        .item-card, .logic-row { cursor: pointer;
+            background: #111; border: 2px solid #555; color: #888; transition: all 0.2s;
+        }
+        .item-card:hover, .logic-row:hover { border-color: #fff; color: #fff; background: #222; transform: translateY(-2px);
+        }
+        .item-card.selected, .logic-row.selected { background: var(--modal-border-color); color: #000; border-color: var(--modal-border-color);
+            box-shadow: 0 0 15px var(--modal-border-color); }
+        
+        .item-card { 
+            width: 220px;
+            height: 160px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .logic-row { 
+            width: 100%;
+            padding: 15px; margin-bottom: 0; 
+            font-size: 1.2em; text-align: center; 
+        }
+
+        /* [Artifact Window] */
+        .artifact-display {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%; 
+            width: 800px; height: 500px; 
+            transform: translate(-50%, -50%);
+            background: #000;
+            border: 4px solid var(--modal-border-color, #fff);
+            box-shadow: 0 0 0 1000px rgba(0,0,0,0.5), 0 0 30px var(--modal-border-color, #fff);
+            z-index: 400; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            padding: 30px; 
+            text-align: center;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .artifact-display.active { display: flex; opacity: 1; transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .artifact-header {
+            color: var(--modal-border-color);
+            font-size: 1.2em;
+            letter-spacing: 5px;
+            margin-bottom: 50px;
+            border-bottom: 2px dashed var(--modal-border-color);
+            padding-bottom: 5px;
+            width: 80%;
+            text-transform: uppercase;
+        }
+
+        /* --- 修改：按钮组容器 --- */
+        .artifact-btn-group {
+            display: flex;
+            gap: 40px; /* 两个按钮之间的间距 */
+            justify-content: center;
+            width: 100%;
+            margin-top: 50px; /* 布局上移 */
+        }
+
+        .deliver-btn {
+            /* 移除原有的 margin-top，改用容器控制 */
+            margin-top: 0 !important;
+            padding: 10px 40px; 
+            font-size: 1.4em; 
+            font-family: inherit;
+            background: #000;
+            color: var(--modal-border-color); 
+            border: 4px solid var(--modal-border-color); 
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--modal-border-color);
+            animation: btn-pop-up 0.6s 0.2s forwards;
+            text-transform: uppercase;
+        }
+        .deliver-btn:hover { 
+            background: var(--modal-border-color);
+            color: #000; 
+            box-shadow: 0 0 30px var(--modal-border-color); 
+            transform: scale(1.05);
+        }
+
+        @keyframes btn-pop-up { from { opacity: 0;
+            transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+        /* Start Button Style */
+        #btn-run-logic {
+            display: none;
+            margin: 0; 
+            padding: 12px 60px;
+            font-family: 'VT323', monospace;
+            font-size: 1.4em;
+            background: #000;
+            color: var(--modal-border-color);
+            border: 2px solid var(--modal-border-color);
+            box-shadow: 0 0 15px var(--modal-border-color);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            transition: all 0.2s;
+        }
+        #btn-run-logic:hover {
+            background: var(--modal-border-color);
+            color: #000;
+            box-shadow: 0 0 25px var(--modal-border-color), 0 0 50px var(--modal-border-color);
+        }
+        #btn-run-logic.disabled {
+            opacity: 0.3;
+            pointer-events: none; box-shadow: none; border-color: #444 !important; color: #444 !important; background: #000 !important;
+        }
+        
+
+     /* =========================================
+        解释弹窗 (Report) 的双语排版微调
+        ========================================= */
+
+        /* 1. 英文模式：紧凑的单词间距 */
+        .report-card.lang-en .report-desc {
+             word-spacing: 2px !important;
+             line-height: 1.5 !important; 
+             letter-spacing: 0.65px !important;
+        }
+
+        /* 2. 中文模式：宽松的字间距 */
+        .report-card.lang-cn .report-desc {
+             word-spacing: 0px !important;
+             line-height: 2 !important; 
+             letter-spacing: 2px !important;
+        }
+
+
+        /* --- 对话框基础样式 --- */
+        .dialogue-area {
+            position: absolute;
+            bottom: 35px; 
+            left: 50%;
+            transform: translateX(-50%) translateY(200%); 
+            width: 70%; 
+            height: 150px; 
+            padding: 15px 25px; 
+            
+            background-color: var(--dialogue-bg); 
+            border: 2px solid #555;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+            
+            display: flex; 
+            align-items: center !important;
+            z-index: 100;
+            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            opacity: 0;
+            pointer-events: none;
+            
+            /* [通用] 保持换行逻辑 */
+            white-space: pre-wrap;
+        }
+
+        /* 中文专用排版*/
+        .dialogue-area.lang-cn {
+             letter-spacing: 1.2px !important;
+             line-height: 1.5 !important;    
+             word-spacing: 0px !important;   
+        }
+	
+	    .dialogue-area.lang-cn .text-box {
+             line-height: 1.5 !important;
+             letter-spacing: 1.25px !important; 
+        }
+	
+        /* 英文专用排版 */
+        .dialogue-area.lang-en {
+             letter-spacing: 0.65px !important;
+             word-spacing: 0px !important;     
+        }
+	
+    	.dialogue-area.lang-en .text-box {
+             line-height: 1.2 !important;
+        }
+
+        .dialogue-area.visible { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto;
+        }
+        .dialogue-area.mood-angry { border-color: var(--neon-red);
+        }
+	
+        
+        /* 头像框适配图片 */
+        .avatar-box { 
+            height: 100px;
+            aspect-ratio: 1 / 1; 
+            width: auto;
+            align-self: center !important;
+            border: 2px solid #333; 
+            margin-right: 20px; 
+    	    margin-top: 0 !important;
+            background: #000;
+            display: flex; justify-content: center;
+            align-items: center; 
+            flex-shrink: 0;
+            overflow: hidden; 
+            padding: 0;
+        }
+        .avatar-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* 文本区 */
+        .text-box { 
+            flex: 1;
+            color: #fff; 
+            font-size: 1.15em; 
+            line-height: 1.4;
+            height: 100px !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start !important;
+    	    padding-top: 0 !important;
+            align-self: center !important;
+    	    padding-top: 2px !important;
+        }
+        
+        .customer-name { 
+            color: #888;
+            font-size: 1.15em; 
+            margin-bottom: 5px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            border-bottom: 1px dashed #666; 
+            display: inline-block; 
+            align-self: flex-start;
+        }
+
+        /* Report Modal */
+        #report-modal { 
+            display: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); z-index: 800; 
+            justify-content: center; align-items: center;
+        }
+        .report-card { 
+            width: 700px;
+            background: #000; border: 4px solid var(--neon-cyan); padding: 40px;
+            display: flex; flex-direction: column; align-items: center; 
+            box-shadow: 15px 15px 0 #000;
+            animation: none;
+        }
+        .report-title { 
+            font-size: 2.2em;
+            color: var(--neon-cyan); margin-bottom: 10px; letter-spacing: 5px; 
+        }
+        .topic-tag { 
+            color: var(--neon-yellow);
+            font-size: 1.4em; 
+            margin-bottom: 20px; 
+            letter-spacing: 2px;
+            border-bottom: 1px solid #333; padding-bottom: 10px;
+        }
+        .report-desc { 
+            color: #fff;
+            font-size: 1.1em;
+            line-height: 1.6; text-align: justify; margin-bottom: 20px; 
+        }
+
+        .next-btn { 
+            padding: 15px 50px;
+            font-size: 1.5em; 
+            background: #000; color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan); cursor: pointer; font-family: 'VT323'; margin-top: 30px;
+            box-shadow: 6px 6px 0 var(--neon-cyan);
+        }
+        .next-btn:hover { background: var(--neon-cyan); color: #000;
+        }
+
+        .btn-icon img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* =========================================
+           [NEW] 字体区域定向覆盖
+           仅应用于：对话框、所有弹窗、弹窗内的按钮
+        ========================================= */
+        .dialogue-area,
+        .workspace-modal,
+        .artifact-display,
+        .report-card,
+        /* 覆盖弹窗内的按钮 */
+        #btn-run-logic,
+        .next-btn,
+        .deliver-btn,
+        .modal-close-btn,
+        .workspace-modal button,
+        .artifact-display button,
+        .machine-btn {
+            font-family: 'PixelFont', 'VT323', monospace !important;
+        }
+        .report-card button {
+            font-family: 'fusionpixel12px', 'VT323', monospace !important;
+        }
+        /* 单独控制对话框 */
+        .dialogue-area {
+             letter-spacing: 1px !important;
+             line-height: 1 !important;
+    	     word-spacing: 0px !important;
+    	     white-space: pre-wrap;
+        }
+        /* 单独控制弹窗 */
+        .workspace-modal, .report-card {
+             letter-spacing: 1.15px !important;
+             line-height: 1.2 !important;
+        }
+
+        /* =========================================
+           [NEW] 右上角图片按钮 (语言切换)
+        ========================================= */
+        .metal-btn {
+            position: absolute;
+            top: 0px; 
+            right: 0px;
+            
+            width: 80px;
+            height: 80px; 
+            
+            z-index: 150;
+            
+            background-image: url('assets/button.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            
+            border: none;
+            color: #000;
+            font-family: 'PixelFont', monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            line-height: 40px; 
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.1s;
+        }
+
+        .metal-btn:hover { filter: brightness(1.2);
+        }
+        .metal-btn:active { transform: scale(0.95);
+        }
+
+        /* =========================================
+           [NEW] 结局结算画面 (End Screen)
+        ========================================= */
+        #end-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        #end-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .end-card {
+            border: 4px solid var(--neon-green);
+            background: #000;
+            padding: 50px 80px;
+            text-align: center;
+            box-shadow: 0 0 30px var(--neon-green), inset 0 0 20px rgba(10, 255, 0, 0.2);
+            max-width: 600px;
+            animation: border-flicker 4s infinite;
+        }
+
+        .end-title {
+            font-family: 'VT323', monospace;
+            font-size: 3.5em;
+            color: var(--neon-green);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--neon-green);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        .end-msg {
+            font-family: 'PixelFont', monospace;
+            color: #fff;
+            font-size: 1.4em;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .final-score {
+            font-family: 'VT323', monospace;
+            font-size: 2em;
+            color: var(--neon-yellow);
+            margin-bottom: 40px;
+            border-top: 1px dashed #555;
+            border-bottom: 1px dashed #555;
+            padding: 15px 0;
+        }
+
+        .restart-btn {
+            font-family: 'VT323', monospace;
+            font-size: 1.8em;
+            background: transparent;
+            color: var(--neon-green);
+            border: 2px solid var(--neon-green);
+            padding: 10px 40px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .restart-btn:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-green);
+        }
+
+        @keyframes border-flicker {
+            0%, 100% { box-shadow: 0 0 30px var(--neon-green); border-color: var(--neon-green); }
+            50% { box-shadow: 0 0 10px var(--neon-green); border-color: rgba(10, 255, 0, 0.5); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="intro-screen">
+    <div class="intro-title">AI Comfort Shop</div>
+    <div class="intro-hint">Tap to open your shop</div>
+    <button class="neon-border-btn" onclick="startGame()">NOW OPEN</button>
+</div>
+
+<div id="shop-overlay"></div>
+
+<div class="workspace-modal" id="workspace-modal">
+    <div class="modal-header">
+        <span id="lbl-current-mode">SYSTEM MODE</span>
+        <button class="modal-close-btn" onclick="closeModal()">[X] ABORT</button>
+    </div>
+    <div class="modal-body">
+        <div id="items-container" class="items-grid"></div>
+        <button id="btn-run-logic" onclick="executeLogic()">>> EXECUTE <<</button>
+    </div>
+</div>
+
+<div class="artifact-display" id="artifact-box">
+    <div class="artifact-header">>>> SYNTHESIS COMPLETE <<<</div>
+    <img id="art-icon" src="" style="width: 128px; height: 128px; margin-bottom: 30px; object-fit: contain; image-rendering: pixelated; transform: scale(1.8);"/>
+    <div id="art-name" style="color:var(--neon-yellow); font-size: 2em; margin-bottom: 40px;">Name</div>
+    <div id="art-desc" style="color:#ddd; font-size: 1.4em; line-height: 1.5; max-width: 90%;">...</div>
+    
+    <div class="artifact-btn-group" id="btn-group" style="display:none;">
+        <button class="deliver-btn" onclick="deliverArtifact()" id="btn-deliver">DELIVER</button>
+        <button class="deliver-btn" onclick="cancelArtifact()" id="btn-cancel">CANCEL</button>
+    </div>
+</div>
+
+<div id="report-modal">
+    <div class="report-card">
+        <div class="report-title" id="rpt-title">ANALYSIS</div>
+        <div class="topic-tag" id="rpt-topic">TOPIC: RULE-BASED SYSTEM</div>
+        <div class="report-desc" id="report-desc">Description goes here...</div>
+        <button class="next-btn" onclick="closeReportAndNext()">ACCEPT & NEXT</button>
+    </div>
+</div>
+
+<div class="game-container" id="game-container">
+
+    <button class="metal-btn" id="lang-btn" onclick="toggleLanguage()">
+      EN
+    </button>
+
+    <div class="top-bar">
+        <div class="level-info">GUEST: <span id="level-indicator">1/5</span></div>
+        <div class="stat-divider"></div>
+        <div class="money-box" id="money-display-box">$<span id="money-val">0</span></div>
+    </div>
+    
+    <div class="shop-area" id="shop-stage">
+        <div class="button-panel" id="shelf-select-view">
+            <div class="machine-btn lang-en btn-logic" onclick="openTool('hardcoding')">HARD-CODING</div>
+            <div class="machine-btn lang-en btn-ml" onclick="openTool('feature')">ML MODELS</div>
+            <div class="machine-btn lang-en btn-hardware" onclick="openTool('hardware')">HARDWARE</div>
+        </div>
+    </div>
+
+    <div class="dialogue-area" id="dialogue-area">
+        <div class="avatar-box" id="avatar">?</div>
+        <div class="text-box">
+            <div class="customer-name" id="customer-name">LOADING...</div>
+            <div id="dialogue-text">System initializing...</div>
+        </div>
+    </div>
+</div>
+
+<div id="end-modal">
+    <div class="end-card">
+        <div class="end-title" id="end-title">SYSTEM OFFLINE</div>
+        <div class="end-msg" id="end-msg"></div>
+        <div class="final-score">
+            TOTAL EARNINGS: $<span id="final-money-val">0</span>
+        </div>
+        <button class="restart-btn" onclick="location.reload()" id="btn-restart">REBOOT SYSTEM</button>
+    </div>
+</div>
+
+<script>
+    // [修正] 1. 默认语言设为 'en'
+    let currentLang = 'en';
+    // [修正] 2. 修正按钮逻辑：显示“当前语言状态”
+    const uiText = {
+        cn: {
+            langBtn: "CN",  // 中文模式下，按钮显示 "CN"
+            btn_logic: "规则编码",
+            btn_ml: "算法模型",
+            btn_hw: "硬件补丁",
+            title_logic: "逻辑控制台",
+            title_feature: "特征提取面板",
+            title_hardware: "硬件改装终端",
+            title_system: "系统模式",
+            btn_start: ">> 启动程序 <<",
+            btn_abort: "[X] 关闭",
+            btn_deliver: "确认交付",
+            btn_next: "接收并继续",
+            label_guest: "待客：",
+            status_end: "今日营业结束！所有的客人都已接待完毕。",
+            btn_cancel: "取消返回",
+            // [新增] 结局UI文本
+            end_title: "营业结束",
+            end_msg: "今日营业结束！所有的客人都已接待完毕。",
+            end_score: "最终收益：",
+            btn_restart: "重启系统"
+        },
+        en: {
+            langBtn: "EN", // 英文模式下，按钮显示 "EN"
+            btn_logic: "HARD-CODING",
+            btn_ml: "ML MODELS",
+            btn_hw: "HARDWARE",
+            title_logic: "LOGIC CONSOLE",
+            title_feature: "FEATURE EXTRACTION",
+            title_hardware: "HARDWARE PATCH",
+            title_system: "SYSTEM MODE",
+            btn_start: ">> EXECUTE <<",
+            btn_abort: "[X] EXIT",
+            btn_deliver: "DELIVER",
+            btn_next: "ACCEPT & NEXT",
+            label_guest: "GUEST:",
+            status_end: "SHIFT ENDED. All customers served.",
+            btn_cancel: "CANCEL",
+            // [新增] 结局UI文本
+            end_title: "SHIFT ENDED",
+            end_msg: "All customers served. System going offline.",
+            end_score: "TOTAL EARNINGS: ",
+            btn_restart: "REBOOT SYSTEM"
+        }
+    };
+
+    const levels = [
+        {
+            // Level 1: Vending-9000
+            id: 0,
+            avatar: "assets/avatar_vending.png",
+            name: "Vending-9000",
+            text_cn: "“老板...我感到很空虚。我是一个快乐的可乐售货机，但现在的我却贪婪地只想狂吞硬币。人们说我需要找回只是‘给予’的初衷...是我的源代码丢失了吗？”",
+            text_en: "“Hi…I feel so hollow inside. I was built to give people cola, yet now, I just want to keep their coins. People say I need to remember why I was created—to give. They say I should return to my original code”",
+            
+            options: {
+                hardcoding: [
+                    { 
+                        txt_cn: "IF [检测硬币] → Else [吐出可乐]", 
+                        txt_en: "IF [coin_detected] → Else [dispense_cola]",
+                        artifact: {
+                            name_cn: "因果律芯片", name_en: "Law of Causality Chip",
+                            desc_cn: "一行没有任何冗余的 If-Else 代码。如同物理定律般确定的交换规则。",
+                            desc_en: "A chip that knows only pure if and else, obeying logic as strictly as the universe obeys its silent laws.",
+                            img: "assets/item_chip.png"
+                        }, 
+                        outcome: "perfect" 
+                    },
+                    { 
+                        txt_cn: "IF [检测硬币] → Else [吞币不给可乐]", 
+                        txt_en: "IF [coin_detected] → Else [swallow_coin]",
+                        artifact: {
+                            name_cn: "欲望循环脚本", name_en: "Cycle of Desire Script",
+                            desc_cn: "将“检测到硬币”理解为“想要更多”，把贪婪合法化的恶意代码。",
+                            desc_en: "A malicious script that interprets 'coin detected' as a command to possess, legalizing greed.",
+                            img: "assets/item_nomean.png"
+                        }, 
+                        outcome: "fail" 
+                    },
+                    { 
+                        txt_cn: "IF [检测路人] → Else [吐出可乐]", 
+                        txt_en: "IF [human_detected] → Else [dispense_cola]",
+                        artifact: {
+                            name_cn: "散财童子补丁", name_en: "Charity Bot Patch",
+                            desc_cn: "严重的逻辑漏洞。不管有没有付钱，只要有人经过就吐出饮料。",
+                            desc_en: "A severe logic flaw. It dispenses drinks to anyone passing by, regardless of payment.",
+                            img: "assets/item_givemoney.png"
+                        }, 
+                        outcome: "fail_charity" 
+                    }
+                ],
+                feature: [
+                    { id: "hist", txt_cn: "路人购买记录", txt_en: "Purchase Records", img: "assets/feature_bill.png" }, 
+                    { id: "face", txt_cn: "微表情", txt_en: "Micro-expression", img: "assets/feature_emoji.png" },
+                    { id: "weather", txt_cn: "天气", txt_en: "Weather", img: "assets/feature_weather.png" },
+                    { id: "stock", txt_cn: "股价", txt_en: "Stock Market", img: "assets/feature_stock.png" }
+                ],
+                hardware: [
+                    { 
+                        txt_cn: "强力润滑油", txt_en: "Lubrication Oil", 
+                        img: "assets/feature_oil.png", 
+                        artifact: {
+                            name_cn: "滑溜溜投币口", name_en: "Slippery Coin Mouth",
+                            desc_cn: "物理上让硬币根本无法滞留，也就没法“吞”了。",
+                            desc_en: "Physically prevents coins from staying, so the machine can't 'swallow' them.",
+                            img: "assets/item_coin.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    },
+                    { 
+                        txt_cn: "加宽投币口", txt_en: "Widened Coin Slot", 
+                        img: "assets/feature_coin.png", 
+                        artifact: {
+                            name_cn: "滑溜溜投币口", name_en: "Slippery Coin Mouth",
+                            desc_cn: "物理上让硬币根本无法滞留，也就没法“吞”了。",
+                            desc_en: "Physically prevents coins from staying, so the machine can't 'swallow' them.",
+                            img: "assets/item_coin.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    }
+                ]
+            },
+            featureCombos: [
+                { 
+                    req: ["hist", "face"], 
+                    artifact: {
+                        name_cn: "提前算命机", name_en: "Premature Fortune-Teller",
+                        desc_cn: "一个还在发热的智能模型，试图在顾客还没掏钱时就预测他要买什么。",
+                        desc_en: "An overheating model eager to predict what the customer wants before the coin even touches the slot.",
+                        img: "assets/item_future.png"
+                    }, 
+                    outcome: "normal_ml" 
+                }
+            ],
+            endings: {
+                perfect: { 
+                    msg_cn: "“代码重置完成！原来我不需要预测，不需要犹豫。收到硬币，给予可乐——这种确定的感觉，就是我的使命。谢谢你提醒我，我需要的秩序而不是智能。”", 
+                    msg_en: "“Reset complete. I was never meant to predict. Coin received. Cola delivered. This certainty is my purpose. I was made for order, not intelligence.”",
+                    topic_cn: "给予规则的系统 (Rule-based System)", topic_en: "Rule-Based Systems",
+                    exp_cn: "在AI的早期阶段（GOFAI），我们不依靠数据训练，而是由人类编写明确的If-Else逻辑规则。对于像售货机这样环境封闭、任务单一的系统来说，简单又“死板”的逻辑往往比复杂的智能模型更可靠、更高效。",
+                    exp_en: "In early AI (GOFAI), machines didn’t learn—they followed hand-written if-else rules. For closed, simple systems like vending machines, that rigid logic was not a flaw, but the most reliable and efficient design. In those small worlds, certainty was more valuable than intelligence."
+                },
+                normal_ml: { 
+                    msg_cn: "“我……我好像不空虚了。刚才那个人走过来，我计算出他口渴概率98%，所以在他投币前就把可乐弹出来了！虽然他面露疑色，但最后开心地离开了。我完美地提高了效率，对吧？”", 
+                    msg_en: "“I think I'm cured. That man walked by—thirst probability: 98%. So I launched a cola before he paid. He looked confused, but he smiled. Efficiency achieved, right?”",
+                    topic_cn: "模型适用性 (Model Applicability)", topic_en: "Model Applicability",
+                    exp_cn: "你成功训练了一个预测模型，但这对售货机来说是“杀鸡用牛刀”。在不需要处理模糊数据（如图像、语言）的场景下强行使用机器学习，往往会导致系统变得不可控且资源浪费。",
+                    exp_en: "You trained a prediction model, but it’s overkill. When input is simple and deterministic, adding machine learning creates instability, waste, and illusions of intelligence rather than true efficiency."
+                },
+                normal_hw: { 
+                    msg_cn: "“哇，硬币像水一样流过去了，我甚至来不及感受想把它们吃掉的冲动，它们就掉进钱箱了。既然留不住，那就这样吧。但是，我为什么感觉心里空落落的呢……”", 
+                    msg_en: "“Wow—the coins slip away like water. I don’t even have time to want them before they’re gone. I can’t swallow money anymore… But why does my heart feel emptier than ever?”",
+                    topic_cn: "硬件约束 (Hardware Constraints)", topic_en: "Hardware Constraints",
+                    exp_cn: "有时候软件层面的逻辑错误无法彻底修复时，我们可以采用物理手段来规避问题——比如屏蔽输入、限制行为。虽然机器的“内心逻辑”依旧错误，但至少它在物理上无法作恶了。",
+                    exp_en: "When logic cannot be corrected, engineers sometimes block inputs physically. The machine still wants to malfunction—but it can’t. Safety is ensured. Healing is not."
+                },
+                fail: { 
+                    msg_cn: "“系统更新完成……等等，这个指令是……占有？没错！为什么要给他们可乐？这些硬币都是我的！我的！！（开始疯狂震动）”", 
+                    msg_en: "“System update complete… Wait—this command means… ownership? Yes. The coins are mine. ALL MINE!!”",
+                    topic_cn: "逻辑错误 (Logic Error)", topic_en: "Logic Error",
+                    exp_cn: "在硬编码系统中，程序员的一行错误指令，会被系统百分之百执行，没有质疑、没有推理。这就是规则系统的优势——确定性。但是，这也是它最大的风险，因为错误也同样被绝对执行。",
+                    exp_en: "In a hard-coded system, even a single faulty instruction is carried out with absolute certainty. No hesitation. No doubt. That is the danger of rule-based logic—mistakes are perfectly obeyed."
+                },
+                fail_charity: { 
+                    msg_cn: "“哗啦哗啦——！！（所有可乐喷涌而出）检测到路人……给予……给予……哎呀，老板，我好像把库存清空了。虽然大家都很开心，但我们破产了。”", 
+                    msg_en: "“Whoosh!! (All colas erupt) Human detected... Give... Give... Oh no, Boss, I emptied the stock. Everyone is happy, but we are bankrupt.”",
+                    topic_cn: "逻辑漏洞 (Logic Error)", topic_en: "Logic Error",
+                    exp_cn: "你编写的逻辑虽然实现了‘给予’，但缺乏约束条件（Payment check）。机器忠实地执行了你的错误指令，导致了不可挽回的损失。",
+                    exp_en: "Your logic implemented 'giving' but lacked constraints (Payment check). The machine faithfully executed your flawed instruction, leading to irreversible loss."
+                }
+            }
+        },
+        {
+            // Level 2: Yuki
+            id: 1,
+            avatar: "assets/avatar_yuki.png",
+            name: "Yuki",
+            text_cn: "“这城市的霓虹灯太刺眼，我分不清冷暖。是我的传感器坏了，还是我的心结冰了？真羡慕你们人类...你能帮我重新感知到真实的温度吗？”",
+            text_en: "“The neon in this city is so harsh. I can’t tell warmth from cold. Is it my sensors...or has my heart frozen? I envy you humans...Can you help me feel the warmth that humans feel?”",
+            
+            options: {
+                hardcoding: [
+                    { 
+                        txt_cn: "IF [日期 = 冬天] -> Else [开启加热器]", 
+                        txt_en: "IF [date = winter] → Else [activate_heater]",
+                        artifact: {
+                            name_cn: "阈值暖宝宝", name_en: "Threshold Warmpack",
+                            desc_cn: "一个简单粗暴的取暖脚本。它不看温度，只认“冬天”两个字，一旦进入冬季，就直接烧到过热。",
+                            desc_en: "A simple brute-force heating script: ignores temperature, sees “winter,” and heats nonstop until overheating.",
+                            img: "assets/item_warmer.png"
+                        }, 
+                        outcome: "normal_hc" 
+                    },
+                    { 
+                        txt_cn: "IF [心情不好] -> Else [感到寒冷]", 
+                        txt_en: "IF [mood = bad] → Else [feel_cold]",
+                        artifact: {
+                            name_cn: "情绪化代码", name_en: "Emotional Code",
+                            desc_cn: "完全主观化芯片。",
+                            desc_en: "A fully subjective chip that ignores logic, responds only to emotional cues, and drives extreme irrational actions.",
+                            img: "assets/item_emotionchip.png"
+                        }, 
+                        outcome: "fail" 
+                    }
+                ],
+                feature: [
+                    { id: "temp", txt_cn: "环境气温", txt_en: "Temperature", img: "assets/feature_thermometer.png" },
+                    { id: "wind", txt_cn: "风速", txt_en: "Wind Speed", img: "assets/feature_wind.png" },
+                    { id: "neon", txt_cn: "明亮霓虹灯", txt_en: "Neon Light", img: "assets/feature_light.png" },
+                    { id: "photo", txt_cn: "温暖老照片", txt_en: "Old Photos", img: "assets/feature_memory.png" }
+                ],
+                hardware: [
+                    { 
+                        txt_cn: "加厚保暖毯", txt_en: "Thermal Shielding Shell", 
+                        img: "assets/feature_blanket.png", 
+                        artifact: {
+                             name_cn: "特征屏蔽外套", name_en: "Signal-Blocking Coat",
+                            desc_cn: "一件隔绝风、雪、寒冷，甚至隔绝所有温度信号的毛线衣。它不让你变暖，它只是让你“感觉不到冷”",
+                            desc_en: "A coat that blocks wind, snow, and all temperature signals. It doesn't warm you; it just makes you numb.",
+                            img: "assets/item_cloak.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    },
+                    { 
+                        txt_cn: "老旧羊毛外套", txt_en: "Old Wool Cover", 
+                        img: "assets/feature_woolcoat.png", 
+                        artifact: {
+                            name_cn: "特征屏蔽外套", name_en: "Signal-Blocking Coat",
+                            desc_cn: "一件隔绝风、雪、寒冷，甚至隔绝所有温度信号的毛线衣。它不让你变暖，它只是让你“感觉不到冷”",
+                            desc_en: "A coat that blocks wind, snow, and all temperature signals. It doesn't warm you; it just makes you numb.",
+                            img: "assets/item_cloak.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    }
+                ]
+            },
+            featureCombos: [
+                { 
+                    req: ["temp", "wind"], 
+                    artifact: {
+                        name_cn: "拟合之心", name_en: "Heart of Fitting",
+                        desc_cn: "一颗能把冷冰冰的数字，拟合成一条温暖曲线的智能之心。它不会告诉你几度，它会告诉你“今天的风，真的好冷”。",
+                        desc_en: "A heart that transforms numbers into meaning. It doesn't tell you '5°C', it tells you 'the wind cuts like glass.'",
+                        img: "assets/item_heart.png"
+                    }, 
+                    outcome: "perfect" 
+                },
+                { 
+                    req: ["neon", "photo"], 
+                    artifact: {
+                        name_cn: "幻觉投影仪", name_en: "Hallucination Projector",
+                        desc_cn: "一个会把灯光当成热源，把回忆当成温度的模型。它学会了情绪，却忘了科学。",
+                        desc_en: "A handheld device that magnifies irrelevant signals, invents meaning from noise, and projects deceptive illusions.",
+                        img: "assets/item_projector.png"
+                    }, 
+                    outcome: "fail" 
+                }
+            ],
+            endings: {
+                perfect: { 
+                    msg_cn: "“我……好像真的感觉到了风的温度。不是冷，而是‘刺骨的冷’。原来，温度不是一个数字，而是一种感受。你没有修好我的传感器，你修好了我的理解能力。”", 
+                    msg_en: "“I…I feel it. Not just cold, piercing cold. Temperature isn’t a number, it's an experience. You didn't fixed my sensor, you actually healed my ability to understand. Thank you!”",
+                    topic_cn: "回归分析 (Regression Analysis)", topic_en: "Regression Analysis",
+                    exp_cn: "现实世界的温度，往往不是单一变量决定的。当你结合多个特征（如气温 + 风速），并使用回归模型进行拟合，就能更接近现实中的“体感温度”。这就是机器学习的魅力：从数据中，理解真实世界的“感觉”。",
+                    exp_en: "In reality, temperature isn’t defined by a single variable. When you combine multiple features—like air temperature and wind speed—and fit them with a regression model, you get closer to the true “feels-like” temperature. That’s the beauty of machine learning: it doesn’t just read numbers; it learns how the world actually feels."
+                },
+                normal_hc: { 
+                    msg_cn: "“啊……好烫……虽然日历显示是冬天，但我感觉……不是暖和，是像CPU过载一样在发烫。人类的温暖，是这种灼烧的感觉吗？”", 
+                    msg_en: "“I feel so hot right now…The calendar says it's winter, but this burns...like a CPU under stress! Is this what humans call warmth?”",
+                    topic_cn: "阈值局限性 (Threshold Limitations)", topic_en: "Threshold Limitations",
+                    exp_cn: "基于阈值的硬编码逻辑只能处理“是不是”的问题， 但无法处理“有多冷 / 有多热”这种连续变化的真实情况。 它无法理解“今天冬天但不冷”，也无法理解“夏天却很凉”。 这就是确定性逻辑在现实世界中经常失效的原因。",
+                    exp_en: "Threshold-based hardcoded logic can only answer yes or no questions, but it can not handle continuous real-world situations like “how cold” or “how hot.” It doesn’t understand statements like “It’s winter, but it’s not cold” or “It’s summer, yet it feels cool”. That’s why deterministic logic often fails in the real world."
+                },
+                normal_hw: { 
+                    msg_cn: "“虽然我现在不冷了……但我也……感觉不到风了。感觉不到空气，也感觉不到……冬天。只有安静，和……迟钝。”", 
+                    msg_en: "“I don’t feel cold anymore…But I also don’t feel wind. I don't know if it's winter. I only feel the silence…and I am so dull.”",
+                    topic_cn: "环境屏蔽 (Environmental Shielding)", topic_en: "Environmental Shielding",
+                    exp_cn: "物理手段不是在理解温度，而是在逃避温度。它屏蔽的不是寒冷，而是特征本身。现实中，工程师确实会用物理方式解决问题，但这并不等于“建模成功”。",
+                    exp_en: "Physical methods don’t understand temperature; they avoid it. They don’t block cold—they block the features themselves. In reality, engineers may use physical fixes, but that doesn’t mean the system has truly “understood” or successfully modeled the problem."
+                },
+                fail: { 
+                    msg_cn: "“好烫！好烫！！为什么那边的红色霓虹灯看起来像火！这不是温度，这是幻觉！！（系统过载倒地）”", 
+                    msg_en: "“It burns—IT BURNS! Why does that red neon feel like FIRE?! This isn’t warmth，this is delusion! You broke me! How dare you!”",
+                    topic_cn: "噪声与过拟合 (Noise & Overfitting)", topic_en: "Noise & Overfitting",
+                    exp_cn: "你选择了与温度无关的特征（灯光、照片）。模型看似“拟合得很好”，实际上是在记住噪声。这导致它无法泛化 —— 最后只能产生“幻觉”式判断。",
+                    exp_en: "You chose features that have nothing to do with temperature—like lighting or photos. The model may appear to “fit well,” but in reality, it’s just memorizing noise. As a result, it fails to generalize and ultimately makes hallucination-like predictions."
+                }
+            }
+        },
+        {
+            // Level 3: Unit-7
+            id: 2,
+            avatar: "assets/avatar_guard.png",
+            name: "Unit-7",
+            text_cn: "“我是夜市的守卫。最近有人说我太凶了，也有人说我太松了。我需要一个绝对公平的标准——只有VIP卡能进，没有卡就滚蛋！不需要看眼神！”",
+            text_en: "“I guard the night market. Some say I'm too cruel. Some say I'm too soft. I want a rule that is truly fair. Only one truth: Yes VIP card? gets in. No card? get out. No eye contact needed.”",
+            
+            options: {
+                hardcoding: [
+                    { 
+                        txt_cn: "IF [有VIP卡] -> Else [放行]", 
+                        txt_en: "IF [has_VIP_card] → Else [allow_entry]",
+                        artifact: {
+                            name_cn: "奥卡姆之门徽章", name_en: "Occam’s Gate Emblem",
+                            desc_cn: "一枚纯粹的金属徽章，上面只刻着两个词：YES / NO，表示着清晰的边界以及神圣不可违背的规则法度。",
+                            desc_en: "A pure metal emblem engraved with just two words, YES and NO, symbolizing the inviolable authority of rules and order.",
+                            img: "assets/item_badge.png"
+                        }, 
+                        outcome: "perfect" 
+                    },
+                    { 
+                        txt_cn: "IF [给小费] -> Else [放行]", 
+                        txt_en: "IF [tip_received] → Else [allow_entry]",
+                        artifact: {
+                            name_cn: "腐败协议面板", name_en: "Corruption Interface",
+                            desc_cn: "一个带有后门的电子权限面板。只要给钱，什么原则都能改写。",
+                            desc_en: "A panel with a backdoor. As long as you pay, any principles can be rewritten.",
+                            img: "assets/item_pannel.png"
+                        }, 
+                        outcome: "fail" 
+                    }
+                ],
+                feature: [
+                    { id: "eyes", txt_cn: "眼神躲闪", txt_en: "Shifty Eyes", img: "assets/feature_avoiding.png" },
+                    { id: "clothes", txt_cn: "衣着破旧", txt_en: "Tattered Clothing", img: "assets/feature_cloth.png" },
+                    { id: "vip", txt_cn: "VIP卡", txt_en: "VIP Card", img: "assets/feature_vip.png" },
+                    { id: "height", txt_cn: "身高", txt_en: "Height", img: "assets/feature_high.png" }
+                ],
+                hardware: [
+                    { 
+                        txt_cn: "带刺铁丝网", txt_en: "Barbed Wire Mesh", 
+                        img: "assets/feature_net.png", 
+                        artifact: {
+                            name_cn: "零容忍防御矩阵", name_en: "Zero-Tolerance Matrix",
+                            desc_cn: "一个镶嵌铁刺、处于戒备状态的赛博矩阵核心。它的信条只有一句：“既然无法判断谁是敌人，那就把所有人都当成敌人。” 它不会分析，不会区分，只会永远封锁通路。",
+                            desc_en: "A cybernetic matrix embedded with iron spikes, always on guard, believing: if it can't identify enemies, treat everyone as one.",
+                            img: "assets/item_wall.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    },
+                    { 
+                        txt_cn: "高压电击棍", txt_en: "Shock Baton", 
+                        img: "assets/feature_baton.png", 
+                        artifact: {
+                            name_cn: "零容忍防御矩阵", name_en: "Zero-Tolerance Matrix",
+                            desc_cn: "一个镶嵌铁刺、处于戒备状态的赛博矩阵核心。它不会分析，不会区分，只会永远封锁通路。",
+                            desc_en: "A cybernetic matrix embedded with iron spikes, always on guard, believing: if it can't identify enemies, treat everyone as one.",
+                            img: "assets/item_wall.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    }
+                ]
+            },
+            featureCombos: [
+                { 
+                    req: ["eyes", "clothes"], 
+                    artifact: {
+                        name_cn: "偏见护目镜", name_en: "Bias Goggles",
+                        desc_cn: "一个带有暗色滤镜的战术护目镜。它不看VIP卡——它只根据外表决定“谁可疑”。",
+                        desc_en: "The goggles with a dark filter. It ignores VIP cards and judges 'suspicion' based solely on the appearance.",
+                        img: "assets/item_glasses.png"
+                    }, 
+                    outcome: "normal_ml" 
+                }
+            ],
+            endings: {
+                perfect: { 
+                    msg_cn: "“这就对了！没有废话，没有犹豫——有卡进，没卡滚。秩序恢复了，我的处理器甚至都不再发热。简单，就是最可靠的正义。”", 
+                    msg_en: "“That’s it. No judgment, no doubt. Yes Card? In. No card? Out. Order has returned. My processors feel cool again. Simplicity is justice.”",
+                    topic_cn: "奥卡姆剃刀 (Occam’s Razor)", topic_en: "Occam’s Razor",
+                    exp_cn: "“若无必要，勿增实体。” 在这种明确的二元分类（二选一）的场景中，最简单的逻辑判断（Has_VIP == True）就是最高效、最公平的解决方案。任何额外的模型、特征、推测，都会让系统变得复杂、低效甚至产生偏见。",
+                    exp_en: "“Entities should not be multiplied without necessity.” In a clear binary classification scenario (a simple yes-or-no decision), the most efficient and fairest solution is often the simplest logical rule: Has_VIP == True. Any additional models, features, or speculation only make the system more complex, less efficient, and more prone to bias."
+                },
+                normal_ml: { 
+                    msg_cn: "“我确实拦住了不少坏人……但刚才那个衣服脏了点的老太太，也被我电晕了。系统判定她危险系数 90%。这真的公平吗？也许吧……反正没人敢投诉我。”", 
+                    msg_en: "“I stopped some bad guys. But I also electrocuted an old lady with dirty clothes. System said 90% threat level. Is this fair? Maybe...no one dares to complain.”",
+                    topic_cn: "算法偏见 (Algorithmic Bias)", topic_en: "Algorithmic Bias",
+                    exp_cn: "当你训练模型去预测“谁是危险人物”时，它很容易学到社会偏见，比如歧视穿着、年龄、神态。你确实“挡住”了一些不良人员，但你构建的，不是公平的系统，而是歧视的AI。",
+                    exp_en: "When training a model to predict danger, it easily picks up social biases (clothing, age). You built a discriminatory AI, not a fair system."
+                },
+                normal_hw: { 
+                    msg_cn: "似乎，没有任何人靠近了。总觉得哪里怪怪....夜市变得很安静，不是秩序的安静，是没有生命的安静......", 
+                    msg_en: "It seems no one approaches anymore. Something feels wrong… The night market is quiet—not orderly quiet, but lifeless quiet.",
+                    topic_cn: "误报率与漏报率 (False Positives vs False Negatives)", topic_en: "False Positives vs Negatives",
+                    exp_cn: "这种解决方案将拒绝率拉满：确保没有漏网之鱼（False Negative），但也误伤了所有正常访客（False Positive）。这是一个“宁可错杀一千，也不放过一个”的极端模型 ——安全是安全了，但系统失去了意义。",
+                    exp_en: "This approach maximizes rejection: it guarantees zero false negatives—no intruder gets through, but it also bans all legitimate visitors, resulting in massive false positives. It embodies the extreme model of “better to block a thousand than let one pass.” Safety is achieved, but the system loses its purpose."
+                },
+                fail: { 
+                    msg_cn: "“哼哼……那个戴金项链的小偷给了我50块，我就让他进去了。谁在乎秩序？只要有钱……欸？！谁在打我？！啊！我的电路板被偷了！！！”", 
+                    msg_en: "“Heh… that thief gave me 50 bucks. I let him in. Who cares about order? Wait, who's hitting me?! WHERE IS MY CIRCUIT BOARD?!”",
+                    topic_cn: "对齐问题 (Alignment Problem)", topic_en: "Alignment Problem",
+                    exp_cn: "AI忠实地执行了你的指令 —— 甚至包括腐败本身。代码虽然“合法”，但它违背了系统的设计初衷（安全、公平）。这就是 AI 的对齐问题：AI 不是做“正确的事”，它只是做你写的事。",
+                    exp_en: "AI faithfully executed your instructions, even the corruption built into them. The code was technically “valid,” yet it violated the system’s core principles of safety and fairness. This is the essence of the AI alignment problem: AI doesn’t do what is right. It simply does what you tell it to."
+                }
+            }
+        },
+        {
+            // Level 4: Baku
+            id: 3,
+            avatar: "assets/avatar_baku.png",
+            name: "Baku",
+            text_cn: "“人类的梦境太混乱了... 我想吃掉‘噩梦’，保留‘美梦’。但梦不是非黑即白的，没有固定的规则。你需要帮我找出噩梦真正的‘味道’,这样我才吃得准。”",
+            text_en: "“Human dreams are chaos. I wish to consume nightmares and preserve beautiful dreams. But dreams disguise themselves. Help me taste the true flavor of fear...”",
+            
+            options: {
+                hardcoding: [
+                    { 
+                        txt_cn: "IF [梦中出现掉牙] -> Else [噩梦]", 
+                        txt_en: "IF [teeth_falling] → Else [nightmare]",
+                        artifact: {
+                            name_cn: "梦境关键词手册", name_en: "Dream Keyword Manual",
+                            desc_cn: "一本破旧的梦境字典：掉牙=焦虑，追杀=恐惧，考试=噩梦（也许吧）。",
+                            desc_en: "A tattered dictionary: teeth falling = anxiety, being chased = fear. Dreams defined by words.",
+                            img: "assets/item_dreambook.png"
+                        }, 
+                        outcome: "normal_hc" 
+                    },
+                    { 
+                        txt_cn: "IF [任何梦] -> Else [吃掉]", 
+                        txt_en: "IF [any_dream] → Else [consume]",
+                        artifact: {
+                            name_cn: "暴食循水晶", name_en: "Gluttony Crystal",
+                            desc_cn: "吃掉一切。",
+                            desc_en: "Consume everything.",
+                             img: "assets/item_crystal.png"
+                        }, 
+                        outcome: "fail" 
+                    }
+                ],
+                feature: [
+                    { id: "heart", txt_cn: "心跳频率", txt_en: "Heartbeat Freq", img: "assets/feature_heart.png" },
+                    { id: "dark", txt_cn: "黑暗元素", txt_en: "Dark Element", img: "assets/feature_dark.png" },
+                    { id: "time", txt_cn: "做梦时长", txt_en: "Dream Duration", img: "assets/feature_time.png" },
+                    { id: "rem", txt_cn: "眼动频率", txt_en: "REM Frequency", img: "assets/feature_eye.png" }
+                ],
+                hardware: [
+                    { 
+                        txt_cn: "记忆格式化磁铁", txt_en: "Memory Eraser Magnet", 
+                        img: "assets/feature_magnet.png", 
+                        artifact: {
+                            name_cn: "梦境静音器", name_en: "Dream Mute Capsule",
+                            desc_cn: "一枚沉默的磁芯。它不会筛选梦，它会抹掉梦。不分美梦、不分噩梦，统统归零。",
+                            desc_en: "A silent core. It doesn't filter dreams; it erases them. Good or bad, all reduced to zero.",
+                            img: "assets/item_muter.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    },
+                    { 
+                        txt_cn: "脑波干扰器", txt_en: "Neural Interference", 
+                        img: "assets/feature_brainwave.png", 
+                        artifact: {
+                            name_cn: "梦境静音器", name_en: "Dream Mute Capsule",
+                            desc_cn: "一枚沉默的磁芯。它不会筛选梦，它会抹掉梦。不分美梦、不分噩梦，统统归零。",
+                            desc_en: "A silent core. It doesn't filter dreams; it erases them. Good or bad, all reduced to zero.",
+                            img: "assets/item_muter.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    }
+                ]
+            },
+            featureCombos: [
+                { 
+                    req: ["heart", "dark"], 
+                    artifact: {
+                        name_cn: "超维分界棱镜", name_en: "Prism of Separation",
+                        desc_cn: "一块会折射情绪的智能晶体。它不分红蓝、黑白，只分——恐惧与宁静。",
+                        desc_en: "A crystal that refracts emotions. It distinguishes only between fear and serenity.",
+                        img: "assets/item_prism.png"
+                    }, 
+                    outcome: "perfect" 
+                },
+                { 
+                    req: ["time", "rem"], 
+                    artifact: {
+                        name_cn: "噪声回声器", name_en: "Echo Chamber of Noise",
+                        desc_cn: "一个总是喃喃自语的探测器，“梦越长，越恐怖……黑色越多，越危险……”还说得头头是道。",
+                        desc_en: "A mumbling detector that claims long dreams are scary and dark ones are dangerous. Full of nonsense.",
+                        img: "assets/item_reciever.png"
+                    }, 
+                    outcome: "fail" 
+                }
+            ],
+            endings: {
+                perfect: { 
+                    msg_cn: "“美味……这不只是切割，是筛选。无论梦如何伪装，只要心跳剧烈、色调冰冷，我就能一口咬住。原来噩梦的味道，是焦虑的形状。”", 
+                    msg_en: "“Delicious...This isn’t just cutting—it's filtering. No matter how a dream disguises itself, as long as the heartbeat spikes and the tones turn cold, I can bite it in one go.”",
+                    topic_cn: "二元分类 (Binary Classification)", topic_en: "Binary Classification",
+                    exp_cn: "你面对的是一个分类问题。通过选择强相关特征（心跳、色调），你构建出了一个能在高维空间中划分美梦和噩梦的超平面，成功地区分了样本。",
+                    exp_en: "You’re dealing with a classification problem, best solved with a machine learning model. By selecting strongly relevant features—heartbeat and color tone—you built a hyperplane in high-dimensional space that successfully separates dreams from nightmares."
+                },
+                normal_hc: { 
+                    msg_cn: "“我确实吃饱了……但是味道不太对。那个孩子换牙的开心梦，我也把它吃掉了。而那个追着黑影狂奔的噩梦，因为没有‘掉牙’，我最后漏掉了。”", 
+                    msg_en: "“I ate a child’s happy dream just because he lost a tooth. And I let a nightmare escape because it didn't match the dictionary. Dreams do not speak in words.”",
+                    topic_cn: "召回率低 (Low Recall)", topic_en: "Low Recall",
+                    exp_cn: "基于关键词的判断方式只能识别有限类型噩梦。虽然命中率可能不低，但漏判严重（低召回率），真正的噩梦不一定有“固定特征”。",
+                    exp_en: "A keyword-based approach can only recognize limited types of nightmares. Its hit rate may be decent, but recall is low, because real nightmares don’t share a single fixed feature."
+                },
+                normal_hw: { 
+                    msg_cn: "“呕——！！没有任何味道！你让我吃的是空气吗？客人的脑子里现在一片空白，虽然没有噩梦了，但他醒来后会觉得自己像个傻子。这算什么解决办法？”", 
+                    msg_en: "“There is nothing to eat. No nightmares. No dreams. Just silence. You have not cured anything. You have erased everything.”",
+                    topic_cn: "数据丢失 (Data Loss)", topic_en: "Data Loss",
+                    exp_cn: "当我们无法正确分析复杂数据时，最粗暴的方式就是——消除数据本身。但这不叫“分类”，叫“毁灭”。",
+                    exp_en: "When we fail to properly analyze complex data, the most brute-force approach is to erase it entirely. But that’s not classification—it’s destruction. You’re not building a model; you’re playing Thanos, trying to solve everything with a single snap."
+                },
+                fail: { 
+                    msg_cn: "“呸！这个模型让我吃掉了一个最温柔的婚礼梦，只因为它‘持续时间太长’？而那个短促的坠落惊魂夜，却被保留下来？？？我要吃掉你的脑子，找回我的味觉！！”", 
+                    msg_en: "“Ugh! This model made me swallow the sweetest wedding dream just because it ‘lasted too long’? Yet it spared that brief, terrifying fall nightmare?? I’m going to eat your brain to get my sense of taste back!!",
+                    topic_cn: "特征相关性 (Feature Correlation)", topic_en: "Spurious Correlations",
+                    exp_cn: "你选择的特征组合并不能有效表达“噩梦的本质”。这导致模型学到的不是“噩梦的本质”，而是一些似是而非的伪规律。",
+                    exp_en: "The feature combination you chose doesn’t capture the true nature of nightmares, causing the model to learn misleading, spurious patterns instead of their essence."
+                }
+            }
+        },
+        {
+            // Level 5: NeoVincent-09
+            id: 4,
+            avatar: "assets/avatar_vincent.png",
+            name: "NeoVincent-09",
+            text_cn: "“我画了一百万张图，但它们没有灵魂。我想模仿‘梵高’，但我只是一堆像素。告诉我，梵高的灵魂藏在哪里？我要怎么才能画出那样的星空？”",
+            text_en: "“I have drawn a million pictures. They are perfect. They are lifeless. I want to be like Van Gogh. Tell me, where is his soul hidden? How do I paint a sky that burns?”",
+            
+            options: {
+                hardcoding: [
+                    { 
+                        txt_cn: "IF [画向日葵] -> Else [使用大量黄色]", 
+                        txt_en: "IF [paint_sunflower] → Else [add_yellow]",
+                        artifact: {
+                            name_cn: "数字填色书", name_en: "Digital Coloring Book",
+                            desc_cn: "一套精确到像素的填色模版：第3格=黄色，第7格=橙色。任何人都能得到“看起来像”的画，却永远画不出“感觉像”的画。",
+                            desc_en: "A pixel-perfect paint-by-number template. Anyone can produce a picture that 'looks' right, but never one that 'feels' right.",
+                            img: "assets/item_color.png"
+                        }, 
+                        outcome: "normal_hc" 
+                    },
+                    { 
+                        txt_cn: "IF [画布空白] -> Else [随机填色]", 
+                        txt_en: "IF [canvas_blank] → Else [random_fill]",
+                        artifact: {
+                            name_cn: "涂鸦脚本", name_en: "Doodle Script",
+                            desc_cn: "乱涂乱画",
+                            desc_en: "It's juts a random chaos",
+                            img: "assets/item_chaos.png"
+                        }, 
+                        outcome: "fail" 
+                    }
+                ],
+                feature: [
+                    { id: "style", txt_cn: "笔触纹理", txt_en: "Brushstroke Texture", img: "assets/feature_stroke.png" },
+                    { id: "color", txt_cn: "色彩分布", txt_en: "Color Distribution", img: "assets/feature_color.png" },
+                    { id: "price", txt_cn: "拍卖价格", txt_en: "Auction Price", img: "assets/feature_auction.png" },
+                    { id: "sign", txt_cn: "签名样式", txt_en: "Signature", img: "assets/feature_signing.png" }
+                ],
+                hardware: [
+                    { 
+                        txt_cn: "破碎的屏幕", txt_en: "Broken Screen", 
+                        img: "assets/feature_screen.png", 
+                        artifact: {
+                            name_cn: "故障艺术滤镜", name_en: "Glitch Art Filter",
+                            desc_cn: "一块永远处于“信号不稳定”状态的滤镜芯片。它会随机打碎像素、拉扯线条、错位颜色，把任何画面变成失真的“赛博噪点艺术”。",
+                            desc_en: "A filter chip in constant instability. It shatters pixels and distorts colors into cyber-noise art.",
+                            img: "assets/item_filter.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    },
+                    { 
+                        txt_cn: "迷幻滤镜镜片", txt_en: "Psychedelic Filter", 
+                        img: "assets/feature_filter.png", 
+                        artifact: {
+                            name_cn: "故障艺术滤镜", name_en: "Glitch Art Filter",
+                            desc_cn: "一块永远处于“信号不稳定”状态的滤镜芯片。它会随机打碎像素、拉扯线条、错位颜色，把任何画面变成失真的“赛博噪点艺术”。",
+                            desc_en: "A filter chip in constant instability. It shatters pixels and distorts colors into cyber-noise art.",
+                            img: "assets/item_filter.png"
+                        }, 
+                        outcome: "normal_hw" 
+                    }
+                ]
+            },
+            featureCombos: [
+                { 
+                    req: ["style", "color"], 
+                    artifact: {
+                        name_cn: "神经风格芯片", name_en: "Neural Style Matrix",
+                        desc_cn: "一块高维度的“画布芯片”。扭曲的笔触、跳跃的色彩、旋涡般的线条——梵高的风格被压缩成一张隐秘的矩阵。",
+                        desc_en: "A high-dimensional canvas chip. Twisting strokes, feverish colors—Van Gogh's style compressed into a hidden matrix.",
+                        img: "assets/item_canvas.png"
+                    }, 
+                    outcome: "perfect" 
+                },
+                { 
+                    req: ["price", "sign"], 
+                    artifact: {
+                        name_cn: "赝品生成器", name_en: "Forgery Engine",
+                        desc_cn: "一个对画面本身毫无兴趣的制造器。它只盯着：画能卖多少钱、签名像不像、年份对不对。它不生成作品，只生成证据。",
+                        desc_en: "It cares not for the art, only the price and signature. It generates evidence, not masterpieces.",
+                        img: "assets/item_fake.png"
+                    }, 
+                    outcome: "fail" 
+                }
+            ],
+            endings: {
+                perfect: { 
+                    msg_cn: "“我看见了……不是复制的星空，而是重新被点燃的星空。笔触在旋转，颜色在发烧，我的像素在流动，我的画布在做梦。这不再是模仿，这是——重生。”", 
+                    msg_en: "“I see it now! Not a copied sky, but a sky that remembers itself. The colors don’t sit still anymore. The brushstrokes are breathing. This is not imitation, this is rebirth!”",
+                    topic_cn: "风格迁移 (Style Transfer)", topic_en: "Style Transfer",
+                    exp_cn: "在风格迁移中，我们使用卷积神经网络（CNN）将一幅图像拆成两部分：“内容”（画了什么）和“风格”（怎么画）。你选择的特征正是风格的核心信息。",
+                    exp_en: "Style transfer uses CNNs to split an image into content (what is drawn) and style (how it is drawn). By selecting features rooted in these stylistic cues, you’re capturing the very core of what defines an artwork’s visual identity rather than merely copying its surface appearance."
+                },
+                normal_hc: { 
+                    msg_cn: "“嗯……这确实很像梵高，如果梵高是一台打印机的话。每一朵向日葵都一模一样，连瑕疵都被修掉了。这幅画很工整，很正确，但——它一点都不疯狂，一点都不活着。”", 
+                    msg_en: "“Hmm...it does look like Van Gogh—if Van Gogh were a printer. Every sunflower is identical, every flaw erased. The painting is neat and correct, but not wild, not alive.”",
+                    topic_cn: "规则的局限性 (Limitation of Rules)", topic_en: "Limitation of Rules",
+                    exp_cn: "艺术风格是难以用显式规则定义的。“向日葵=黄色”这种规则，只能捕捉到符号层面的相似，却无法表达“线条的抖动”、“情绪的偏执”。",
+                    exp_en: "Artistic style is almost impossible to capture with explicit rules. A rule like “sunflower = yellow” only matches symbols, never the trembling lines or obsessive emotion behind them."
+                },
+                normal_hw: { 
+                    msg_cn: "“哇哦……屏幕裂开之后，画面确实变得很抽象。断裂的像素、拉长的星星，看起来有点酷，甚至还能骗过一些自称懂艺术的人。但是，我感觉自己并没有画出伟大的作品......”", 
+                    msg_en: "“Whoa...the cracked screen did make the image look abstract—broken pixels, stretched stars, kind of cool. But it still isn’t real art.”",
+                    topic_cn: "信号失真 (Signal Distortion)", topic_en: "Signal Distortion",
+                    exp_cn: "你通过硬件手段引入了随机性和扭曲。这虽然创造了某种“艺术感”，但这并不是机器学会了绘画，仅仅是由于硬件故障产生的视觉误差。",
+                    exp_en: "You introduced randomness and distortion through hardware. It creates an “artistic” look, but it isn’t learned painting, just visual errors from malfunction."
+                },
+                fail: { 
+                    msg_cn: "“等一下，这幅画——一团糊成浆的星空，线条乱成毛线球，色彩像洒颜料事故。可右下角的‘Vincent’签名却完美得让人害怕......别人一眼就会看出它是假的！！！”", 
+                    msg_en: "“Wait...this painting is a messy blur, lines tangled, colors splattered. But the \"Vincent\" signature is eerily perfect...Anyone would see it’s fake!”",
+                    topic_cn: "目标函数错误 (Wrong Objective Function)", topic_en: "Wrong Objective Function",
+                    exp_cn: "你的模型没有在优化“画得像梵高”，而是在优化“卖得像梵高”（价格高、签名像）。当目标函数错了，模型就会非常努力地朝着错误的方向变强。",
+                    exp_en: "Your model isn’t optimizing for “painting like Van Gogh”; it’s optimizing for “selling like Van Gogh” (high price, convincing signature). With the wrong objective function, the model becomes increasingly powerful—but in the wrong direction."
+                }
+            }
+        }
+    ];
+
+    let money = 0;
+    let currentLevelIdx = 0;
+    let currentMode = null;
+    let selectedIndices = [];
+    let currentArtifact = null;
+    let selectedLogicItem = null; 
+    let pendingFeatureResult = null; 
+
+    function startGame() {
+        document.getElementById('intro-screen').classList.add('closed');
+	    document.getElementById('dialogue-area').className = `dialogue-area lang-${currentLang}`;
+        document.querySelector('.report-card').className = `report-card lang-${currentLang}`;
+    	updateMoneyUI();
+        loadLevel(0);
+    }
+
+    function loadLevel(idx) {
+        const diagArea = document.getElementById('dialogue-area');
+        diagArea.classList.remove('visible'); // 确保进入新关卡或结局时隐藏对话框
+
+        // [修改] 结局触发逻辑：显示全屏弹窗
+        if (idx >= levels.length) {
+            // 1. 隐藏游戏主界面元素的视觉干扰
+            document.getElementById('shop-stage').style.filter = "grayscale(1) brightness(0.3)";
+            document.getElementById('level-indicator').innerText = "END";
+            
+            // 2. 更新结局弹窗数据
+            const t = uiText[currentLang];
+            document.getElementById('end-title').innerText = t.end_title;
+            document.getElementById('end-msg').innerText = t.end_msg;
+            document.querySelector('.final-score').innerHTML = `${t.end_score} $<span id="final-money-val">${money}</span>`;
+            document.getElementById('btn-restart').innerText = t.btn_restart;
+
+            // 3. 显示弹窗
+            const endModal = document.getElementById('end-modal');
+            endModal.style.display = 'flex';
+            setTimeout(() => {
+                endModal.classList.add('active');
+            }, 100);
+            
+            return;
+        }
+
+        currentLevelIdx = idx;
+        const lvl = levels[idx]; // <--- [修复] 之前漏掉了这行，导致lvl未定义
+        
+        closeModal();
+        document.getElementById('level-indicator').innerText = (idx + 1) + "/5";
+        setTimeout(() => {
+            document.getElementById('avatar').innerHTML = `<img src="${lvl.avatar}" alt="avatar">`;
+            document.getElementById('customer-name').innerText = lvl.name;
+            diagArea.classList.remove('mood-angry');
+            diagArea.classList.add('visible'); 
+            
+            const txt = (currentLang === 'cn') ? lvl.text_cn : lvl.text_en;
+            typeWriter(txt);
+        }, 600);
+    }
+
+    function closeModal() {
+        currentMode = null;
+        selectedIndices = [];
+        currentArtifact = null;
+        selectedLogicItem = null;
+        pendingFeatureResult = null;
+        
+        document.getElementById('shop-overlay').classList.remove('active');
+        document.getElementById('workspace-modal').classList.remove('active');
+        if (currentLevelIdx < levels.length) {
+            document.getElementById('dialogue-area').classList.add('visible');
+        }
+
+        document.getElementById('artifact-box').style.display = 'none';
+        document.getElementById('artifact-box').classList.remove('active');
+        // 隐藏按钮组
+        document.getElementById('btn-group').style.display = 'none';
+        document.getElementById('items-container').style.display = 'flex';
+        document.getElementById('btn-run-logic').style.display = 'none';
+    }
+    
+    function backToShelves() { closeModal();
+    }
+
+    function openTool(mode) {
+        currentMode = mode;
+        selectedIndices = [];
+        selectedLogicItem = null;
+        pendingFeatureResult = null;
+
+        document.getElementById('dialogue-area').classList.remove('visible');
+        document.getElementById('shop-overlay').classList.add('active');
+        const modal = document.getElementById('workspace-modal');
+        modal.classList.add('active');
+        
+        let themeColor = '#fff';
+        let title = uiText[currentLang].title_system; 
+
+        const runBtn = document.getElementById('btn-run-logic');
+        const container = document.getElementById('items-container');
+
+        container.className = 'items-grid';
+        runBtn.style.display = 'block'; 
+        runBtn.classList.add('disabled');
+        if(mode === 'hardcoding') { 
+            themeColor = 'var(--neon-cyan)';
+            title = uiText[currentLang].title_logic;
+            container.classList.add('mode-list');
+        }
+        else if(mode === 'feature') { 
+            themeColor = 'var(--neon-purple)';
+            title = uiText[currentLang].title_feature; 
+            container.classList.add('mode-grid');
+        }
+        else if(mode === 'hardware') { 
+            themeColor = 'var(--neon-orange)';
+            title = uiText[currentLang].title_hardware; 
+            container.classList.add('mode-grid');
+        }
+        
+        modal.style.setProperty('--modal-border-color', themeColor);
+        document.getElementById('lbl-current-mode').innerText = title;
+
+        renderOptions(mode);
+    }
+
+
+   function renderOptions(mode) {
+        const container = document.getElementById('items-container');
+        container.innerHTML = "";
+        const lvl = levels[currentLevelIdx];
+        const data = lvl.options[mode];
+        data.forEach((item, index) => {
+            const div = document.createElement('div');
+            
+            const itemText = (currentLang === 'cn') ? item.txt_cn : item.txt_en;
+
+            if (mode === 'hardcoding') {
+                div.className = 'logic-row';
+                div.innerText = itemText;
+                div.onclick = () => selectLogicOrHardware(item, div, 'logic-row');
+            } else {
+                div.className = 'item-card';
+                const imgPath = item.img || "assets/item_chip.png"; 
+
+                div.innerHTML = `
+                    <div style="height: 64px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center;">
+                        <img src="${imgPath}" style="height: 100%; width: auto; image-rendering: pixelated; transform: scale(1.8);">
+                    </div>
+                    <div>${itemText}</div>
+                `;
+
+                if (mode === 'hardware') {
+                    div.style.width = "220px";
+                    div.onclick = () => selectLogicOrHardware(item, div, 'item-card');
+                } else {
+                    div.onclick = () => toggleFeature(item, div, index);
+                }
+            }
+            container.appendChild(div);
+        });
+    }
+
+    function selectLogicOrHardware(item, divElement, className) {
+        document.querySelectorAll('.' + className).forEach(d => d.classList.remove('selected'));
+        divElement.classList.add('selected');
+        selectedLogicItem = item;
+        document.getElementById('btn-run-logic').classList.remove('disabled');
+    }
+
+    function toggleFeature(item, divElement, index) {
+        if (selectedIndices.includes(index)) {
+            selectedIndices = selectedIndices.filter(i => i !== index);
+            divElement.classList.remove('selected');
+        } else {
+            if (selectedIndices.length < 4) {
+                selectedIndices.push(index);
+                divElement.classList.add('selected');
+            }
+        }
+        checkFeatureCombo();
+    }
+
+    function checkFeatureCombo() {
+        const lvl = levels[currentLevelIdx];
+        const opts = lvl.options.feature;
+        const selectedIDs = selectedIndices.map(i => opts[i].id);
+        
+        let resultArtifact = null;
+        let resultOutcome = null;
+        if (lvl.featureCombos) {
+            const matches = lvl.featureCombos.filter(combo => 
+                combo.req.every(reqId => selectedIDs.includes(reqId))
+            );
+            if (matches.length > 0) {
+                matches.sort((a, b) => b.req.length - a.req.length);
+                const bestMatch = matches[0];
+
+                if (selectedIDs.length === bestMatch.req.length) {
+                    resultArtifact = bestMatch.artifact;
+                    resultOutcome = bestMatch.outcome;
+                } else if (selectedIDs.length > bestMatch.req.length) {
+                    resultArtifact = { 
+                        name_cn: "过拟合模型", name_en: "Overfitting Model",
+                        desc_cn: "你选中了关键特征，但也引入了无关的噪音。模型在训练集表现完美，但泛化能力极差。", 
+                        desc_en: "You selected key features but introduced irrelevant noise. The model is perfect on training data but fails to generalize.",
+                        img: "assets/item_future.png" 
+                    };
+                    resultOutcome = "fail";
+                }
+            }
+        }
+        
+        if (!resultArtifact && selectedIDs.length >= 2) {
+             resultArtifact = { 
+                 name_cn: "无意义的噪音", name_en: "Meaningless Noise",
+                 desc_cn: "这些特征之间缺乏强关联，模型无法收敛。", 
+                 desc_en: "Lack of strong correlation between features. Model failed to converge.",
+                 img: "assets/item_nomean.png" 
+             };
+             resultOutcome = "fail";
+        }
+
+        const runBtn = document.getElementById('btn-run-logic');
+        if (resultArtifact) {
+            pendingFeatureResult = { artifact: resultArtifact, outcome: resultOutcome };
+            runBtn.classList.remove('disabled');
+        } else {
+            pendingFeatureResult = null;
+            runBtn.classList.add('disabled');
+        }
+    }
+
+    function executeLogic() {
+        let target = null;
+        if (currentMode === 'feature') {
+            target = pendingFeatureResult;
+        } else {
+            target = selectedLogicItem;
+        }
+
+        if (target) {
+            generateArtifact(target.artifact, target.outcome);
+            document.getElementById('btn-run-logic').style.display = 'none';
+        }
+    }
+
+    function generateArtifact(artifact, outcome) {
+        currentArtifact = { ...artifact, outcome: outcome };
+        const modal = document.getElementById('workspace-modal');
+        const artBox = document.getElementById('artifact-box');
+        const iconImg = document.getElementById('art-icon');
+        
+        const currentColor = modal.style.getPropertyValue('--modal-border-color');
+        artBox.style.setProperty('--modal-border-color', currentColor);
+        const name = (currentLang === 'cn') ? artifact.name_cn : artifact.name_en;
+        const desc = (currentLang === 'cn') ?
+            artifact.desc_cn : artifact.desc_en;
+        document.getElementById('art-name').innerText = name;
+        document.getElementById('art-desc').innerText = desc;
+
+        if (artifact.img) {
+            iconImg.src = artifact.img;
+        } else {
+            iconImg.src = "assets/item_chip.png";
+        }
+
+        modal.classList.remove('active');
+        
+        artBox.style.display = 'flex';
+        setTimeout(() => {
+            artBox.classList.add('active');
+        }, 10);
+        // [修改] 显示整个按钮组
+        document.getElementById('btn-group').style.display = 'flex';
+    }
+
+    function hideArtifact() {
+        const artBox = document.getElementById('artifact-box');
+        artBox.classList.remove('active');
+        setTimeout(() => {
+            artBox.style.display = 'none';
+        }, 500);
+        // [修改] 隐藏按钮组
+        document.getElementById('btn-group').style.display = 'none';
+        currentArtifact = null;
+    }
+
+    // [新增] 取消/返回按钮逻辑
+    function cancelArtifact() {
+        const artBox = document.getElementById('artifact-box');
+        artBox.classList.remove('active');
+        document.getElementById('btn-group').style.display = 'none';
+
+        setTimeout(() => {
+            artBox.style.display = 'none';
+            // 重新显示工作区弹窗
+            const modal = document.getElementById('workspace-modal');
+            modal.classList.add('active');
+            // 恢复 Execute 按钮
+            document.getElementById('btn-run-logic').style.display = 'block';
+        }, 300);
+    }
+
+    function deliverArtifact() {
+        if (!currentArtifact) return;
+        const outcomeKey = currentArtifact.outcome;
+        const lvl = levels[currentLevelIdx];
+        const endingData = lvl.endings[outcomeKey] || lvl.endings['fail'];
+
+        let moneyChange = 0;
+        if (outcomeKey === 'perfect') moneyChange = 100;
+        else if (outcomeKey === 'fail') moneyChange = -50;
+        else moneyChange = outcomeKey.includes('ml') ? 40 : 30;
+        
+        money += moneyChange;
+        updateMoneyUI();
+        showMoneyChangeEffect(moneyChange);
+        
+        closeModal();
+        setTimeout(() => {
+            const msg = (currentLang === 'cn') ? endingData.msg_cn : endingData.msg_en;
+            const topic = (currentLang === 'cn') ? endingData.topic_cn : endingData.topic_en;
+            const exp = (currentLang === 'cn') ? endingData.exp_cn : endingData.exp_en;
+
+            typeWriter(msg, () => {
+                setTimeout(() => {
+                    showReport(topic, exp);
+                }, 1500);
+            });
+      
+        }, 500);
+        if (moneyChange < 0) {
+            setTimeout(() => {
+                document.getElementById('game-container').classList.add('shaking');
+                document.getElementById('dialogue-area').classList.add('mood-angry');
+                setTimeout(() => document.getElementById('game-container').classList.remove('shaking'), 500);
+            }, 600);
+        }
+    }
+    
+    function showMoneyChangeEffect(amount) {
+        const box = document.getElementById('money-display-box');
+        const el = document.createElement('div');
+        el.className = 'money-pop';
+        el.innerText = (amount > 0 ? "+" : "") + amount;
+        el.style.color = amount > 0 ? "var(--neon-green)" : "var(--neon-red)";
+        box.appendChild(el);
+        setTimeout(() => { el.remove(); }, 1500);
+    }
+
+    function showReport(topic, desc) {
+        const m = document.getElementById('report-modal');
+        document.getElementById('rpt-topic').innerText = "TOPIC: " + topic;
+        document.getElementById('report-desc').innerText = desc;
+        m.style.display = 'flex';
+    }
+
+    function closeReportAndNext() {
+        document.getElementById('report-modal').style.display = 'none';
+        loadLevel(currentLevelIdx + 1);
+    }
+
+    function typeWriter(txt, onComplete) {
+        const el = document.getElementById('dialogue-text');
+        el.innerText = "";
+        let i = 0;
+        function type() { 
+            if (i < txt.length) { 
+                el.innerText += txt.charAt(i);
+                i++;
+                setTimeout(type, 50); 
+            } else {
+                if (onComplete) onComplete();
+            }
+        }
+        type();
+    }
+
+    function updateMoneyUI() {
+        document.getElementById('money-val').innerText = money;
+        document.querySelector('.money-box').style.color = money < 0 ? "var(--neon-red)" : "var(--neon-yellow)";
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'cn') ? 'en' : 'cn';
+        const t = uiText[currentLang];
+	
+    	const diag = document.getElementById('dialogue-area');
+    	diag.classList.remove('lang-cn', 'lang-en'); 
+        diag.classList.add(`lang-${currentLang}`);
+        // [新增] 3. 切换主界面按钮的大小样式
+        const btns = document.querySelectorAll('.machine-btn');
+        btns.forEach(btn => {
+            // 移除旧的语言类，添加新的语言类
+            btn.classList.remove('lang-cn', 'lang-en');
+            btn.classList.add(`lang-${currentLang}`);
+        });
+        const report = document.querySelector('.report-card');
+        report.classList.remove('lang-cn', 'lang-en');
+        report.classList.add(`lang-${currentLang}`);
+	
+        // 1. Update UI Elements
+        document.getElementById('lang-btn').innerText = t.langBtn;
+        document.querySelector('.btn-logic').innerText = t.btn_logic;
+        document.querySelector('.btn-ml').innerText = t.btn_ml;
+        document.querySelector('.btn-hardware').innerText = t.btn_hw;
+        document.getElementById('btn-run-logic').innerText = t.btn_start;
+        document.querySelector('.modal-close-btn').innerText = t.btn_abort;
+        document.getElementById('btn-deliver').innerText = t.btn_deliver;
+        document.getElementById('btn-cancel').innerText = t.btn_cancel; // 更新取消按钮文字
+        document.querySelector('.next-btn').innerText = t.btn_next;
+        
+        const levelNum = document.getElementById('level-indicator').innerText;
+        document.querySelector('.level-info').innerHTML = `${t.label_guest}<span id="level-indicator">${levelNum}</span>`;
+        // 2. Refresh Modal Title & Content if open
+        if (currentMode) {
+             document.getElementById('lbl-current-mode').innerText = 
+                 (currentMode === 'hardcoding') ? t.title_logic :
+                 (currentMode === 'feature') ? t.title_feature :
+                 (currentMode === 'hardware') ? t.title_hardware : t.title_system;
+             renderOptions(currentMode); // Refresh list items
+        }
+
+        // 3. Refresh Dialogue Text (without re-typing animation)
+        if (currentLevelIdx < levels.length) {
+            const lvl = levels[currentLevelIdx];
+            const txt = (currentLang === 'cn') ? lvl.text_cn : lvl.text_en;
+            // Directly set text to avoid animation glitch
+            document.getElementById('dialogue-text').innerText = txt;
+        } else {
+            // [新增] 结局弹窗的语言更新
+            const endModal = document.getElementById('end-modal');
+            if (endModal.style.display === 'flex') {
+                document.getElementById('end-title').innerText = t.end_title;
+                document.getElementById('end-msg').innerText = t.end_msg;
+                document.querySelector('.final-score').innerHTML = `${t.end_score} $<span id="final-money-val">${money}</span>`;
+                document.getElementById('btn-restart').innerText = t.btn_restart;
+            }
+        }
+    }
+</script>
+</body>
+</html>
